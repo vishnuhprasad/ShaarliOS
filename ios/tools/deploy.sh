@@ -23,7 +23,7 @@ fi
 
 app=ShaarliOS
 host=simply
-base="/var/www/lighttpd/drop.mro.name/public_html/dev/$app"
+base="/var/www/lighttpd/lager.mro.name/public_html/dev/$app"
 tmp="/tmp/deploy.Info.plist"
 
 # extract CFBundleVersion from Info.plist:
@@ -47,6 +47,6 @@ say -v Fiona "${app} version ${version} deployed, now comes doxygen docs upload"
 cd "$(dirname "$0")"
 sh doxygen.sh && rsync --progress --delete -avPz ../build/doxygen/ "${host}:${base}/docs/v${version}"
 
-open "http://drop.mro.name/dev/${app}/docs/v${version}/"
+open "http://lager.mro.name/dev/${app}/docs/v${version}/"
 
 say -v Fiona "all done."
