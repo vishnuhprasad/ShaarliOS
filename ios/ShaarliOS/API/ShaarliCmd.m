@@ -327,8 +327,6 @@ NSMutableDictionary *dictFromXPathFormInputNameValue(const xmlXPathContextPtr ct
     self.response = response;
     if( error )
         *error = nil;
-    if( !data )
-        return NO;
     // MRLogD(@"%@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding], nil);
     {
         // parse HTML
@@ -339,7 +337,14 @@ NSMutableDictionary *dictFromXPathFormInputNameValue(const xmlXPathContextPtr ct
         NSAssert(NULL != ctxHtml, @"no HTML context", nil);
         const xmlParserErrors errorCode = htmlParseChunk(ctxHtml, "", 0, YES);
         // NSAssert(XML_ERR_OK == errorCode, @"foo", nil);
-        NSAssert(NULL != ctxHtml->myDoc, @"no document found", nil);
+        if( NULL == ctxHtml->myDoc ) {
+            if( error ) {
+                *error = [NSError errorWithDomain:SHAARLI_ERROR_DOMAIN code:SHAARLI_ERROR_EMPTY_RESPONSE userInfo:@ { NSURLErrorKey:response.URL, NSLocalizedDescriptionKey:NSLocalizedString(@"Empty reponse.", @"ShaarliResponse") }
+                         ];
+            }
+            return NO;
+        }
+        NSParameterAssert(XML_ERR_OK == errorCode);
     }
     {
         // create a XPath context

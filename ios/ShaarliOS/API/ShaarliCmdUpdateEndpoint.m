@@ -135,13 +135,21 @@ State_t;
         MRLogD(@"%@ %@ %@", HTTP_GET, u, self.credential.user, nil);
         [[session dataTaskWithURL:u completionHandler:^(NSData * data, NSURLResponse * response, NSError * error) {
               // MRLogD (@"complete %@", response.URL, nil);
-              if( error ) {
+              NSHTTPURLResponse *httpR = (NSHTTPURLResponse *)response;
+              // MRLogD (@"%@", httpR.allHeaderFields, nil);
+              if( error || HTTP_STATUS_OK != httpR.statusCode ) {
                   // retry with (unsecure) http
                   if( [HTTP_HTTPS isEqualToString:self.scheme] ) {
                       self.scheme = HTTP_HTTP;
                       state = GetLoginFormAndToken;
                       [weakSelf processState:autoNextSteps - 1];
                       return;
+                  }
+                  if( !error ) {
+                      NSParameterAssert (HTTP_STATUS_OK != httpR.statusCode);
+                      // sadly we cannot get the reason phrase as returned by the server: http://stackoverflow.com/a/18905087
+                      error = [NSError errorWithDomain:HTTP_ERROR_DOMAIN code:httpR.statusCode userInfo:@ { NSURLErrorKey:response.URL, NSLocalizedDescriptionKey:[NSHTTPURLResponse localizedStringForStatusCode:httpR.statusCode] }
+                              ];
                   }
                   [weakSelf exitIfError:error autoResume:autoNextSteps - 1];
                   return;
